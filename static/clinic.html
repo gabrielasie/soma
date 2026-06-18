@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Soma Clinic</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter+Tight:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/tokens.css">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page { max-width: 860px; margin: 0 auto; padding: 0 32px; }
+@media (max-width: 640px) { .page { padding: 0 16px; } }
+
+/* Header */
+.clinic-header { padding: 32px 0 24px; border-bottom: 1px solid var(--border); }
+.clinic-name {
+  font-family: var(--font-serif);
+  font-size: var(--text-heading);
+  font-weight: 500;
+  line-height: 1.2;
+}
+.clinic-meta {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-top: 6px;
+}
+
+/* State cards */
+.state-cards {
+  display: flex;
+  gap: 12px;
+  padding: 24px 0;
+  border-bottom: 1px solid var(--border);
+}
+.state-card {
+  flex: 1;
+  padding: 16px;
+  border-radius: 6px;
+  background: var(--sand);
+  text-align: center;
+}
+.state-count {
+  font-family: var(--font-serif);
+  font-size: var(--text-heading);
+  font-weight: 500;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.state-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.state-card.green .state-count { color: var(--forest); }
+.state-card.steady .state-count { color: var(--text); }
+.state-card.watch .state-count { color: var(--amber); }
+.state-card.red .state-count { color: var(--accent); }
+
+/* Patient list */
+.patient-list { padding: 8px 0 64px; }
+.patient-row {
+  display: grid;
+  grid-template-columns: 1.6fr 0.5fr 0.7fr 0.7fr 0.8fr 0.4fr;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+  text-decoration: none;
+  color: inherit;
+  transition: background 150ms;
+}
+.patient-row:hover { background: var(--sand); margin: 0 -12px; padding: 14px 12px; border-radius: 4px; }
+.patient-row-header {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 20px 0 8px;
+  border-bottom: 1px solid var(--border);
+}
+.patient-name {
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  font-weight: 500;
+}
+.patient-age {
+  font-family: var(--font-mono);
+  font-size: var(--text-small);
+  color: var(--muted);
+}
+.patient-days {
+  font-family: var(--font-mono);
+  font-size: var(--text-small);
+  color: var(--muted);
+}
+.patient-checkin {
+  font-family: var(--font-mono);
+  font-size: var(--text-small);
+  color: var(--muted);
+}
+.state-badge {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 3px;
+  font-weight: 500;
+}
+.state-badge.green { background: var(--forest-tint); color: var(--forest); }
+.state-badge.steady { background: var(--sand); color: var(--text); }
+.state-badge.watch { background: var(--amber-tint); color: var(--amber); }
+.state-badge.red { background: var(--accent-tint); color: var(--accent); }
+.flag-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.flag-empty { width: 8px; height: 8px; }
+
+.loading {
+  padding: 64px 0;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 640px) {
+  .state-cards { flex-wrap: wrap; }
+  .state-card { min-width: calc(50% - 8px); }
+  .patient-row { grid-template-columns: 1.4fr 0.6fr 0.6fr 0.4fr; }
+  .patient-days, .patient-checkin { display: none; }
+  .patient-row-header .col-days,
+  .patient-row-header .col-checkin { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="clinic-header">
+    <div class="clinic-name">Soma Clinic</div>
+    <div class="clinic-meta" id="clinic-meta">Loading...</div>
+  </div>
+  <div class="state-cards" id="state-cards"></div>
+  <div class="patient-list" id="patient-list">
+    <div class="loading">Loading patients&hellip;</div>
+  </div>
+</div>
+
+<script>
+function shortDate(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00');
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return d.getDate() + ' ' + months[d.getMonth()];
+}
+
+async function loadClinic() {
+  try {
+    const res = await fetch('/api/clinic/patients');
+    if (!res.ok) throw new Error(res.statusText);
+    const data = await res.json();
+
+    // Header
+    document.getElementById('clinic-meta').textContent =
+      shortDate(data.date) + ' \u00B7 ' + data.total + ' patients \u00B7 ' +
+      data.flagged + ' flagged';
+
+    // State cards
+    const cardsEl = document.getElementById('state-cards');
+    const stateOrder = ['green', 'steady', 'watch', 'red'];
+    const stateLabels = { green: 'Green', steady: 'Steady', watch: 'Watch', red: 'Red' };
+    cardsEl.innerHTML = stateOrder.map(s =>
+      `<div class="state-card ${s}">
+        <div class="state-count">${data.states[s] || 0}</div>
+        <div class="state-label">${stateLabels[s]}</div>
+      </div>`
+    ).join('');
+
+    // Patient list
+    const listEl = document.getElementById('patient-list');
+    let html = `<div class="patient-row patient-row-header">
+      <div>Name</div>
+      <div>Age</div>
+      <div>State</div>
+      <div class="col-days">Days</div>
+      <div class="col-checkin">Last check-in</div>
+      <div>Flag</div>
+    </div>`;
+
+    // Sort: flagged first, then by state severity
+    const statePriority = { red: 0, watch: 1, steady: 2, green: 3 };
+    const sorted = [...data.patients].sort((a, b) => {
+      if (a.flag !== b.flag) return a.flag ? -1 : 1;
+      return (statePriority[a.state] || 3) - (statePriority[b.state] || 3);
+    });
+
+    sorted.forEach(p => {
+      html += `<a class="patient-row" href="/clinic/patient/${p.id}">
+        <div class="patient-name">${p.name}</div>
+        <div class="patient-age">${p.age}</div>
+        <div><span class="state-badge ${p.state}">${p.state}</span></div>
+        <div class="patient-days">${p.days_on_soma}d</div>
+        <div class="patient-checkin">${shortDate(p.last_checkin)}</div>
+        <div>${p.flag ? '<span class="flag-dot"></span>' : '<span class="flag-empty"></span>'}</div>
+      </a>`;
+    });
+
+    listEl.innerHTML = html;
+  } catch (e) {
+    document.getElementById('patient-list').innerHTML =
+      '<div class="loading">Could not load clinic data.</div>';
+  }
+}
+
+loadClinic();
+</script>
+</body>
+</html>

@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Soma Clinic — Patient</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter+Tight:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/tokens.css">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page { max-width: 860px; margin: 0 auto; padding: 0 32px; }
+@media (max-width: 640px) { .page { padding: 0 16px; } }
+
+.back-link {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  color: var(--muted);
+  text-decoration: none;
+  display: inline-block;
+  padding: 24px 0 0;
+}
+.back-link:hover { color: var(--text); }
+
+/* Patient header */
+.patient-header { padding: 24px 0 20px; border-bottom: 1px solid var(--border); }
+.patient-title-row { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.patient-name {
+  font-family: var(--font-serif);
+  font-size: var(--text-heading);
+  font-weight: 500;
+  line-height: 1.2;
+}
+.state-badge {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 3px;
+  font-weight: 500;
+}
+.state-badge.green { background: var(--forest-tint); color: var(--forest); }
+.state-badge.steady { background: var(--sand); color: var(--text); }
+.state-badge.watch { background: var(--amber-tint); color: var(--amber); }
+.state-badge.red { background: var(--accent-tint); color: var(--accent); }
+.patient-meta {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  margin-top: 8px;
+}
+.flag-banner {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: var(--accent-tint);
+  border-radius: 4px;
+  font-family: var(--font-sans);
+  font-size: var(--text-small);
+  color: var(--accent);
+  font-weight: 500;
+}
+
+/* Signal cards */
+.signal-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  padding: 24px 0;
+  border-bottom: 1px solid var(--border);
+}
+.signal-card {
+  padding: 16px;
+  background: var(--sand);
+  border-radius: 6px;
+}
+.signal-value {
+  font-family: var(--font-serif);
+  font-size: var(--text-heading);
+  font-weight: 500;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.signal-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Section */
+.section { padding: 24px 0; border-bottom: 1px solid var(--border); }
+.section:last-child { border-bottom: none; padding-bottom: 64px; }
+.section-title {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+/* Trend charts */
+.trend-chart { margin-bottom: 20px; }
+.trend-chart svg { display: block; width: 100%; height: 140px; }
+.trend-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+/* Adherence */
+.adherence-row {
+  display: grid;
+  grid-template-columns: 1.5fr 0.8fr 1fr;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.adherence-row:last-child { border-bottom: none; }
+.adherence-row-header {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.adherence-name { font-size: var(--text-small); }
+.adherence-target {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  color: var(--muted);
+}
+.adherence-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.adherence-bar {
+  flex: 1;
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.adherence-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--forest);
+  transition: width 400ms ease;
+}
+.adherence-pct {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  color: var(--muted);
+  min-width: 32px;
+  text-align: right;
+}
+
+/* Brief generation */
+.brief-controls {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.brief-focus {
+  flex: 1;
+  min-width: 200px;
+  font-family: var(--font-sans);
+  font-size: var(--text-small);
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--text);
+  outline: none;
+}
+.brief-focus::placeholder { color: var(--muted); }
+.brief-focus:focus { border-color: var(--muted); }
+.brief-btn {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 9px 20px;
+  background: var(--text);
+  color: var(--bg);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.brief-btn:hover { opacity: 0.85; }
+.brief-btn:disabled { opacity: 0.4; cursor: default; }
+
+.brief-output {
+  font-family: var(--font-sans);
+  font-size: var(--text-small);
+  line-height: 1.7;
+  white-space: pre-wrap;
+  padding: 20px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  display: none;
+}
+.brief-output.visible { display: block; }
+
+.loading {
+  padding: 64px 0;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+@media print {
+  .back-link, .brief-controls { display: none; }
+  .page { max-width: none; padding: 0; }
+  .brief-output { border: none; padding: 0; background: none; }
+}
+
+@media (max-width: 640px) {
+  .signal-cards { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <a href="/clinic" class="back-link">&larr; Back to clinic</a>
+  <div id="content">
+    <div class="loading">Loading patient&hellip;</div>
+  </div>
+</div>
+
+<script>
+/* ── Helpers ── */
+function shortDate(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00');
+  return d.getDate() + '/' + (d.getMonth() + 1);
+}
+
+function mean(arr) {
+  const valid = arr.filter(v => v != null);
+  return valid.length ? valid.reduce((a, b) => a + b, 0) / valid.length : null;
+}
+
+/* ── Trend chart renderer ── */
+function renderTrend(label, dates, values, color) {
+  const W = 796, H = 140, PAD_T = 12, PAD_B = 24, PAD_L = 8, PAD_R = 8;
+  const chartW = W - PAD_L - PAD_R;
+  const chartH = H - PAD_T - PAD_B;
+
+  const vals = values.filter(v => v != null);
+  if (vals.length < 2) return '';
+
+  const min = Math.min(...vals) - 2;
+  const max = Math.max(...vals) + 2;
+  const range = max - min || 1;
+  const avg = mean(values);
+
+  const x = i => PAD_L + i * chartW / (values.length - 1);
+  const y = v => PAD_T + (max - v) * chartH / range;
+  const baseY = avg != null ? y(avg) : H / 2;
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+  // Baseline
+  if (avg != null) {
+    svg += `<line x1="${PAD_L}" y1="${baseY}" x2="${W - PAD_R}" y2="${baseY}" style="stroke:var(--muted);stroke-width:1;stroke-dasharray:3 3;opacity:0.25"/>`;
+    svg += `<text x="${W - PAD_R}" y="${baseY - 5}" text-anchor="end" style="font-family:var(--font-mono);font-size:9px;fill:var(--muted);opacity:0.5">avg ${Math.round(avg)}</text>`;
+  }
+
+  // Line path
+  const pathPts = values.map((v, i) => {
+    if (v == null) return '';
+    const prev = i > 0 ? values[i - 1] : null;
+    const cmd = (i === 0 || prev == null) ? 'M' : 'L';
+    return `${cmd}${x(i).toFixed(1)},${y(v).toFixed(1)}`;
+  }).filter(Boolean).join(' ');
+
+  svg += `<path d="${pathPts}" style="stroke:${color};stroke-width:1.5;fill:none;stroke-linecap:round;stroke-linejoin:round"/>`;
+
+  // Dots
+  values.forEach((v, i) => {
+    if (v == null) return;
+    const isLast = i === values.length - 1;
+    const r = isLast ? 3.5 : 1.5;
+    const fill = isLast ? 'var(--accent)' : color;
+    const opacity = isLast ? '1' : '0.3';
+    svg += `<circle cx="${x(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="${r}" style="fill:${fill};opacity:${opacity}"/>`;
+  });
+
+  // Date labels
+  const labelIdxs = [0, Math.floor(values.length / 2), values.length - 1];
+  labelIdxs.forEach(i => {
+    if (dates[i]) {
+      svg += `<text x="${x(i).toFixed(1)}" y="${H - 4}" text-anchor="middle" style="font-family:var(--font-mono);font-size:9px;fill:var(--muted)">${shortDate(dates[i])}</text>`;
+    }
+  });
+
+  svg += '</svg>';
+
+  return `<div class="trend-chart">
+    <div class="trend-label">${label}</div>
+    ${svg}
+  </div>`;
+}
+
+/* ── Render ── */
+function renderPatient(p) {
+  let html = '';
+
+  // Header
+  html += `<div class="patient-header">
+    <div class="patient-title-row">
+      <span class="patient-name">${p.name}</span>
+      <span class="state-badge ${p.state}">${p.state}</span>
+    </div>
+    <div class="patient-meta">
+      Age ${p.age} &middot; ${p.days_on_soma} days on Soma &middot;
+      Cycle day ${p.cycle.day} (${p.cycle.phase}) &middot;
+      Last check-in ${shortDate(p.last_checkin)}
+    </div>
+    ${p.flag ? `<div class="flag-banner">${p.flag_detail}</div>` : ''}
+  </div>`;
+
+  // Signal cards
+  const signals = p.today_signals;
+  const signalDefs = [
+    { key: 'sleep_score', label: 'Sleep' },
+    { key: 'hrv_balance', label: 'HRV' },
+    { key: 'readiness_score', label: 'Readiness' },
+    { key: 'deep_sleep_score', label: 'Deep sleep' },
+  ];
+  html += '<div class="signal-cards">';
+  signalDefs.forEach(s => {
+    const val = signals[s.key];
+    html += `<div class="signal-card">
+      <div class="signal-value">${val != null ? val : '—'}</div>
+      <div class="signal-label">${s.label}</div>
+    </div>`;
+  });
+  html += '</div>';
+
+  // 30-day trends
+  html += '<div class="section">';
+  html += '<div class="section-title">30-day trends</div>';
+  html += renderTrend('Sleep score', p.history.dates, p.history.sleep_score, 'var(--muted)');
+  html += renderTrend('HRV balance', p.history.dates, p.history.hrv_balance, 'var(--muted)');
+  html += renderTrend('Readiness', p.history.dates, p.history.readiness_score, 'var(--muted)');
+  html += renderTrend('Deep sleep', p.history.dates, p.history.deep_sleep_score, 'var(--muted)');
+  html += '</div>';
+
+  // Protocol adherence
+  html += '<div class="section">';
+  html += '<div class="section-title">Protocol adherence</div>';
+  html += `<div class="adherence-row adherence-row-header">
+    <div>Protocol</div><div>Target</div><div>Adherence</div>
+  </div>`;
+  p.adherence.forEach(a => {
+    const fillColor = a.adherence_pct >= 80 ? 'var(--forest)' : a.adherence_pct >= 60 ? 'var(--amber)' : 'var(--accent)';
+    html += `<div class="adherence-row">
+      <div class="adherence-name">${a.protocol}</div>
+      <div class="adherence-target">${a.target}</div>
+      <div class="adherence-bar-wrap">
+        <div class="adherence-bar"><div class="adherence-fill" style="width:${a.adherence_pct}%;background:${fillColor}"></div></div>
+        <div class="adherence-pct">${a.adherence_pct}%</div>
+      </div>
+    </div>`;
+  });
+  html += '</div>';
+
+  // Pre-visit brief
+  html += '<div class="section">';
+  html += '<div class="section-title">Pre-visit brief</div>';
+  html += `<div class="brief-controls">
+    <input type="text" class="brief-focus" id="brief-focus" placeholder="Optional focus area (e.g. sleep quality, HRV decline)">
+    <button class="brief-btn" id="brief-btn" onclick="generateBrief()">Generate brief</button>
+  </div>`;
+  html += '<div class="brief-output" id="brief-output"></div>';
+  html += '</div>';
+
+  return html;
+}
+
+/* ── Brief generation ── */
+async function generateBrief() {
+  const btn = document.getElementById('brief-btn');
+  const output = document.getElementById('brief-output');
+  const focus = document.getElementById('brief-focus').value;
+  const patientId = window.location.pathname.split('/').pop();
+
+  btn.disabled = true;
+  btn.textContent = 'Generating...';
+  output.classList.remove('visible');
+
+  try {
+    const res = await fetch(`/api/clinic/patient/${patientId}/brief`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ focus }),
+    });
+    if (!res.ok) throw new Error(res.statusText);
+    const data = await res.json();
+    output.textContent = data.brief;
+    output.classList.add('visible');
+  } catch (e) {
+    output.textContent = 'Could not generate brief. Try again.';
+    output.classList.add('visible');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Generate brief';
+  }
+}
+
+/* ── Load ── */
+async function loadPatient() {
+  const patientId = window.location.pathname.split('/').pop();
+  try {
+    const res = await fetch(`/api/clinic/patient/${patientId}`);
+    if (!res.ok) throw new Error(res.statusText);
+    const data = await res.json();
+    document.title = `Soma Clinic — ${data.name}`;
+    document.getElementById('content').innerHTML = renderPatient(data);
+  } catch (e) {
+    document.getElementById('content').innerHTML =
+      '<div class="loading">Patient not found.</div>';
+  }
+}
+
+loadPatient();
+</script>
+</body>
+</html>
