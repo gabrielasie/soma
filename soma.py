@@ -2,7 +2,11 @@
 
 import json
 import os
+import platform
+import shutil
+import subprocess
 import sys
+import tempfile
 
 from dotenv import load_dotenv
 
@@ -25,11 +29,50 @@ Style rules:
 - No wellness influencer tone. No "listen to your body" or "honor your rest."
 - Open with a one-sentence verdict that translates the readiness state (green/yellow/red) into plain language.
 - Cap the morning brief at 180 words.
+- When recommendations mention specific times (like "Walk at 11:30" or "Lift at 16:00" or "Lunch at 12:30"), use those exact times in the narration. The brief knows the user's calendar, so reference the specific times and event titles from context_notes. The narration should sound like it knows the schedule, not like generic advice.
+- If a recommendation has a context_note, reference it naturally in the narration. Do not list every adaptation; weave the most important one or two in.
+- If cycle context is available AND the day's signals suggest a connection (e.g. lower HRV in late luteal), the narrator MAY mention this as observation, NEVER as prescription. Example: "HRV is down 6 points; you're in late luteal phase, which can amplify the dip." Do NOT prescribe phase-specific training or nutrition. Do NOT use phrases like "because you're in your luteal phase, you should..." Phase is context, not cause.
 
 When answering follow-up questions:
 - Ground every answer in the brief JSON and the 14-day data provided.
 - If the data does not contain enough information to answer, say so directly.
 - Stay concise. You are a tool, not a companion."""
+
+
+def play_audio(audio_bytes: bytes) -> None:
+    """Write MP3 bytes to a temp file and play through the OS audio player."""
+    with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as f:
+        f.write(audio_bytes)
+        path = f.name
+
+    system = platform.system()
+    cmd = None
+    if system == "Darwin":
+        cmd = ["afplay", path]
+    elif system == "Windows":
+        cmd = ["powershell", "-NoProfile", "-Command",
+               f"(New-Object Media.SoundPlayer '{path}').PlaySync()"]
+    else:
+        for player in ("ffplay", "mpg123", "play", "aplay"):
+            if shutil.which(player):
+                cmd = [player, "-nodisp", "-autoexit", path] if player == "ffplay" else [player, path]
+                break
+
+    if not cmd:
+        print(f"No audio player found. Brief audio saved to {path}")
+        return
+
+    try:
+        subprocess.run(cmd, check=True,
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except (subprocess.CalledProcessError, FileNotFoundError) as e:
+        print(f"Could not play audio ({e}). Saved to {path}")
+        return
+
+    try:
+        os.remove(path)
+    except OSError:
+        pass
 
 
 def narrate_brief(client, brief: dict, data: dict) -> str:
@@ -88,11 +131,44 @@ def interactive_chat(client, brief: dict, data: dict):
         print(f"\nSoma: {reply}\n")
 
 
+def handle_log_command(args):
+    """Handle 'log period start/end [date]' commands."""
+    if len(args) < 2 or args[0] != "period":
+        print("Usage: python soma.py log period start [YYYY-MM-DD]")
+        print("       python soma.py log period end [YYYY-MM-DD]")
+        return
+
+    from cycle import log_period_start, log_period_end, get_current_phase, get_phase_label
+
+    action = args[1]
+    date_str = args[2] if len(args) > 2 else None
+
+    if action == "start":
+        log = log_period_start(date_str)
+        print(f"Period start logged: {date_str or 'today'}")
+        phase = get_current_phase()
+        if phase:
+            print(f"Current phase: {get_phase_label(phase)}")
+    elif action == "end":
+        log = log_period_end(date_str)
+        print(f"Period end logged: {date_str or 'today'}")
+    else:
+        print(f"Unknown action: {action}. Use 'start' or 'end'.")
+
+
 def main():
+    # Check for subcommands
+    if len(sys.argv) > 1 and sys.argv[1] == "log":
+        handle_log_command(sys.argv[2:])
+        return
+
+    from demo import is_demo
+    demo = is_demo()
+
     token = os.environ.get("OURA_TOKEN")
     api_key = os.environ.get("ANTHROPIC_API_KEY")
 
-    if not token:
+    if not token and not demo:
         print("Set OURA_TOKEN in .env")
         sys.exit(1)
     if not api_key:
@@ -102,7 +178,7 @@ def main():
     client = anthropic.Anthropic(api_key=api_key)
 
     # Pull fresh data
-    print("Pulling Oura data...")
+    print("Running in DEMO_MODE: synthetic data only." if demo else "Pulling Oura data...")
     try:
         data = pull(token)
     except Exception as e:
@@ -134,6 +210,17 @@ def main():
     print("Generating morning brief...\n")
     narrative = narrate_brief(client, brief, data)
     print(narrative)
+
+    # Speak the brief via ElevenLabs (best-effort; never blocks the CLI)
+    try:
+        from tts import synthesize_speech, TTSError
+        print("\nGenerating audio...")
+        audio = synthesize_speech(narrative)
+        play_audio(audio)
+    except TTSError as e:
+        print(f"(Audio unavailable: {e})")
+    except Exception as e:
+        print(f"(Audio playback skipped: {e})")
 
     # Interactive chat
     interactive_chat(client, brief, data)
