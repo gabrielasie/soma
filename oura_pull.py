@@ -7,6 +7,8 @@ from pathlib import Path
 
 import requests
 
+from demo import is_demo, synthetic_oura
+
 BASE = "https://api.ouraring.com"
 CACHE_PATH = Path(__file__).parent / "data" / "cache.json"
 
@@ -91,11 +93,15 @@ EXTRACTORS = {
 
 def pull(token: str = None) -> dict:
     """Fetch 14 days of Oura data. Returns dict keyed by date string."""
+    # DEMO_MODE: never hit the Oura API and never touch the real cache file.
+    if is_demo():
+        return synthetic_oura()
+
     token = token or os.environ["OURA_TOKEN"]
     headers = {"Authorization": f"Bearer {token}"}
 
     end = date.today()
-    start = end - timedelta(days=14)
+    start = end - timedelta(days=28)
     params = {"start_date": str(start), "end_date": str(end)}
 
     days = {}
@@ -124,6 +130,9 @@ def pull(token: str = None) -> dict:
 
 def load_cache() -> dict:
     """Load cached data if available."""
+    # DEMO_MODE: return the synthetic profile, never read the real cache file.
+    if is_demo():
+        return synthetic_oura()
     if CACHE_PATH.exists():
         with open(CACHE_PATH) as f:
             return json.load(f)
