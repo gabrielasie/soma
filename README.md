@@ -72,17 +72,20 @@ DEMO_MODE=true python verify_demo.py
 Turn `DEMO_MODE` off (or remove it) to run against real data, which then requires `OURA_TOKEN` and, for the calendar, Google OAuth credentials. Restart the server after changing the flag.
 
 ## Screenshots
+<img width="646" height="798" alt="Screenshot 2026-06-18 at 17 35 17" src="https://github.com/user-attachments/assets/a73c29c4-4964-4bef-bc92-9b980d3d0da0" />
 
-<!-- Replace these placeholders with real images, e.g. in a docs/ folder. -->
-
-![Dashboard](docs/screenshot-dashboard.png)
 *Morning brief and readiness dashboard.*
+<img width="658" height="825" alt="Screenshot 2026-06-18 at 17 35 29" src="https://github.com/user-attachments/assets/1895a3b4-9e7d-4191-a31a-aa55c41147dd" />
 
-![Clinic view](docs/screenshot-clinic.png)
-*Clinician view with synthetic patients.*
 
 ## Demo video
 
 <!-- Replace with a link to the demo recording. -->
 
-[Watch the demo](https://example.com/soma-demo)
+[Watch the demo] 
+
+https://github.com/user-attachments/assets/6ffd1603-5894-4d9a-b5d6-1b942677ede3
+
+
+
+
