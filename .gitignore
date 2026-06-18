@@ -1,9 +1,10 @@
 venv/
+.venv/
 __pycache__/
 *.pyc
 
-# Local data cache (personal biometric data)
-data/cache.json
+# Local data: runtime caches + personal biometric/cycle data — never commit
+data/
 
 # Secrets — never commit
 .env
