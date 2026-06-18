@@ -1,5 +1,15 @@
 venv/
-.env
-data/cache.json
 __pycache__/
 *.pyc
+
+# Local data cache (personal biometric data)
+data/cache.json
+
+# Secrets — never commit
+.env
+credentials.json
+token.json
+client_secret*.json
+*.pem
+*.key
+*.p12
