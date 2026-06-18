@@ -1,0 +1,2034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Soma</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter+Tight:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/tokens.css">
+<script src="/verdict-engine.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  cursor: default;
+}
+
+button, a, [onclick], .chip, .why-toggle, .signals-more, .retry-btn, .send-btn { cursor: pointer; }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+:focus:not(:focus-visible) { outline: none; }
+
+.page { max-width: 760px; margin: 0 auto; padding: 0 32px; }
+@media (max-width: 640px) { .page { padding: 0 16px; } }
+
+.hidden { display: none !important; }
+
+/* ========== SKELETON ========== */
+.sk { background: var(--border); border-radius: 4px; }
+.sk-hero { padding: 48px 0 32px; }
+.sk-line1 { width: 60%; height: 44px; margin-bottom: 10px; }
+.sk-line2 { width: 40%; height: 44px; margin-bottom: 16px; }
+.sk-chips { display: flex; gap: 8px; }
+.sk-chip { width: 80px; height: 20px; border-radius: 100px; }
+
+/* ========== SECTION 1: HERO ========== */
+.hero { padding: 48px 0 24px; }
+.hero-wordmark {
+  font-family: var(--font-serif);
+  font-size: var(--text-body);
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+.hero-verdict {
+  font-family: var(--font-serif);
+  font-size: var(--text-display);
+  font-weight: 500;
+  line-height: 1.1;
+  max-width: 16ch;
+  margin-bottom: 16px;
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+.hero-verdict.visible { opacity: 1; }
+
+/* Why this verdict */
+.verdict-why-link {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  color: var(--muted);
+  background: none;
+  border: none;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  margin-bottom: 16px;
+  display: inline-block;
+}
+.verdict-why-link:hover { color: var(--text); }
+.verdict-panel {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 400ms ease, opacity 300ms ease, margin 300ms ease;
+  margin-bottom: 0;
+}
+.verdict-panel.visible {
+  max-height: 600px;
+  opacity: 1;
+  margin-bottom: 16px;
+}
+.verdict-table {
+  width: 100%;
+  max-width: 520px;
+  border-collapse: collapse;
+  margin-bottom: 16px;
+}
+.verdict-table th {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: left;
+  padding: 0 12px 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.verdict-table th:last-child { text-align: right; padding-right: 0; }
+.verdict-table td {
+  font-family: var(--font-sans);
+  font-size: var(--text-small);
+  padding: 6px 12px 6px 0;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.verdict-table td:last-child { text-align: right; padding-right: 0; }
+.verdict-table tr:last-child td { border-bottom: none; }
+.verdict-table .vt-signal { font-weight: 500; }
+.verdict-table .vt-delta {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+}
+.vt-flag-above  { color: var(--forest); }
+.vt-flag-normal { color: var(--muted); }
+.vt-flag-drag   { color: var(--accent); }
+.vt-flag-nodata { color: var(--border); }
+.verdict-reasoning {
+  font-family: var(--font-sans);
+  font-size: var(--text-small);
+  color: var(--text);
+  line-height: 1.6;
+  max-width: 520px;
+}
+
+/* Chip row */
+.chip-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.info-chip {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 100px;
+  white-space: nowrap;
+}
+.info-chip.date-chip {
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+.info-chip.state-chip.green { background: var(--forest-tint); color: var(--forest); }
+.info-chip.state-chip.yellow { background: var(--amber-tint); color: var(--amber); }
+.info-chip.state-chip.red { background: var(--accent-tint-12); color: var(--accent); }
+.info-chip.cycle-chip {
+  color: var(--muted);
+  border: 1px solid var(--border);
+  position: relative;
+}
+.info-chip.weather-chip {
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+.cycle-info-btn {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  color: var(--muted);
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 4px;
+  vertical-align: middle;
+  cursor: pointer;
+  line-height: 1;
+}
+.cycle-tooltip {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-family: var(--font-sans);
+  font-size: var(--text-small);
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--muted);
+  line-height: 1.4;
+  max-width: 280px;
+  white-space: normal;
+  z-index: 50;
+}
+
+/* ========== SECTION 2: METRICS STRIP ========== */
+.metrics-strip {
+  display: flex;
+  padding: 0 0 24px;
+  border-bottom: 1px solid var(--border);
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+.metrics-strip.visible { opacity: 1; }
+.metric-card {
+  flex: 1;
+  min-width: 0;
+  padding: 0 20px;
+}
+.metric-card:first-child { padding-left: 0; }
+.metric-card:last-child { padding-right: 0; }
+.metric-card + .metric-card { border-left: 1px solid var(--border); }
+.metric-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.metric-number {
+  font-family: var(--font-serif);
+  font-size: var(--text-heading);
+  font-weight: 500;
+  line-height: 1.1;
+  margin-bottom: 4px;
+}
+.metric-spark svg { display: block; }
+
+/* ========== SECTION 3: NARRATION ========== */
+.narration-section {
+  padding: 24px 0;
+  border-bottom: 1px solid var(--border);
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+.narration-section.visible { opacity: 1; }
+.narration-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.narration-heading {
+  font-family: var(--font-serif);
+  font-size: var(--text-body);
+  font-weight: 500;
+}
+.narration-toggle {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  color: var(--accent);
+  background: none;
+  border: none;
+  text-decoration: underline;
+  padding: 0;
+}
+.narration-heading-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.brief-play {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  color: var(--accent);
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease, opacity 150ms ease;
+}
+.brief-play:hover { border-color: var(--accent); }
+.brief-play.loading { opacity: 0.6; cursor: default; }
+.brief-play-icon { font-size: 9px; line-height: 1; }
+.demo-badge {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 1000;
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #7a4a00;
+  background: #ffd27a;
+  border: 1px solid #e0a83c;
+  border-radius: 999px;
+  padding: 4px 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+}
+.narration-body {
+  max-width: 65ch;
+}
+.narration-text {
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  line-height: 1.6;
+}
+.narration-expanded {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 400ms ease, opacity 300ms ease;
+}
+.narration-expanded.visible {
+  max-height: 800px;
+  opacity: 1;
+}
+.narration-sub-section {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.narration-sub-heading {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.narration-sub-text {
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  line-height: 1.6;
+  color: var(--text);
+}
+
+/* ========== SECTION 4: AGENDA ========== */
+.agenda-section {
+  padding: 24px 0 0;
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+.agenda-section.visible { opacity: 1; }
+.agenda-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.agenda-heading {
+  font-family: var(--font-serif);
+  font-size: var(--text-heading);
+  font-weight: 500;
+}
+.view-toggle { display: flex; gap: 0; }
+.view-pill {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: none;
+  border: 1px solid var(--border);
+  padding: 4px 12px;
+  cursor: pointer;
+  transition: background 150ms, color 150ms;
+}
+.view-pill:first-child { border-radius: 4px 0 0 4px; }
+.view-pill:last-child { border-radius: 0 4px 4px 0; border-left: none; }
+.view-pill.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+
+/* Agenda rows */
+.agenda-list { display: flex; flex-direction: column; }
+
+/* Time-of-day group labels */
+.agenda-group-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 16px 0 8px;
+  opacity: 0.6;
+}
+.agenda-group-label:first-child { padding-top: 8px; }
+
+.agenda-row {
+  display: flex;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--border);
+  transition: background 200ms ease, opacity 200ms ease;
+  position: relative;
+}
+.agenda-row:last-child { border-bottom: none; }
+.agenda-row:hover { background: var(--sand); margin: 0 -16px; padding-left: 16px; padding-right: 16px; }
+
+.agenda-row.is-plan {
+  border-left: 2px solid var(--accent);
+  padding-left: 14px;
+}
+.agenda-row.is-plan:hover { padding-left: 30px; border-left: 2px solid var(--accent); }
+
+.agenda-row.is-calendar { color: var(--calendar-text); }
+
+/* Past events: reduced opacity and thinner left border */
+.agenda-row.is-past { opacity: 0.6; }
+.agenda-row.is-past.is-plan { border-left-width: 1px; padding-left: 15px; }
+
+.agenda-time {
+  width: 88px;
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+.agenda-time-start {
+  font-family: var(--font-mono);
+  font-size: var(--text-body);
+  font-weight: 500;
+  line-height: 1.2;
+}
+.agenda-time-end {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.agenda-content {
+  flex: 1;
+  min-width: 0;
+  padding-left: 20px;
+}
+
+/* Plan row content */
+.agenda-cat-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.agenda-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+.agenda-category {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.agenda-plan-title {
+  font-family: var(--font-serif);
+  font-size: var(--text-body);
+  font-weight: 500;
+  line-height: 1.3;
+  margin-bottom: 4px;
+}
+.agenda-detail {
+  font-family: var(--font-sans);
+  font-size: var(--text-small);
+  color: var(--muted);
+  line-height: 1.4;
+  margin-bottom: 4px;
+}
+.why-toggle {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  color: var(--accent);
+  text-decoration: underline;
+  background: none;
+  border: none;
+  padding: 0;
+}
+.agenda-reason {
+  font-family: var(--font-sans);
+  font-size: var(--text-small);
+  color: var(--muted);
+  line-height: 1.5;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 200ms ease, margin-top 200ms ease;
+  margin-top: 0;
+}
+.agenda-reason.expanded { max-height: 160px; margin-top: 6px; }
+
+/* Calendar row content */
+.agenda-cal-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.agenda-cal-title {
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  line-height: 1.3;
+}
+.agenda-cal-title.focus-block { font-style: italic; color: var(--text); }
+.agenda-cal-until {
+  font-family: var(--font-sans);
+  font-size: var(--text-small);
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* Now indicator — thin line spanning full width */
+.agenda-now {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+}
+.agenda-now-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  white-space: nowrap;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.agenda-now-line { flex: 1; border-top: 1px solid var(--accent); }
+
+/* Empty / error */
+.agenda-empty {
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  font-style: italic;
+  color: var(--muted);
+  text-align: center;
+  padding: 40px 0;
+}
+.calendar-error-msg {
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  font-style: italic;
+  color: var(--accent);
+  padding: 24px 0;
+}
+
+/* ========== WEEK VIEW ========== */
+.week-view { display: none; }
+.week-view.active { display: block; }
+.week-row {
+  display: flex;
+  align-items: center;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+  transition: background 200ms ease;
+  cursor: pointer;
+}
+.week-row:last-child { border-bottom: none; }
+.week-row:hover { background: var(--sand); margin: 0 -16px; padding-left: 16px; padding-right: 16px; }
+.week-row-left {
+  width: 120px;
+  flex-shrink: 0;
+}
+.week-row-date {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  color: var(--muted);
+}
+.week-row-weekday {
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  font-weight: 500;
+}
+.week-row-state {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 3px;
+  margin-top: 2px;
+}
+.week-row-state.state-green { background: var(--forest-tint); color: var(--forest); }
+.week-row-state.state-yellow { background: var(--amber-tint); color: var(--amber); }
+.week-row-state.state-red { background: var(--accent-tint-12); color: var(--accent); }
+.week-row-state.state-pending { background: var(--border); color: var(--muted); }
+.week-row-right { flex: 1; min-width: 0; }
+.week-row-verdict {
+  font-family: var(--font-serif);
+  font-size: var(--text-body);
+  font-weight: 400;
+  line-height: 1.3;
+  margin-bottom: 2px;
+}
+.week-row-summary {
+  font-family: var(--font-sans);
+  font-size: var(--text-small);
+  color: var(--muted);
+}
+.week-back-link {
+  font-family: var(--font-sans);
+  font-size: var(--text-small);
+  color: var(--accent);
+  background: none;
+  border: none;
+  padding: 8px 0;
+  text-decoration: underline;
+  display: none;
+}
+
+/* ========== SECTION 5: TOMORROW ========== */
+.tomorrow-section {
+  padding: 24px 0;
+  border-top: 1px solid var(--border);
+}
+.tomorrow-heading {
+  font-family: var(--font-serif);
+  font-size: var(--text-heading);
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+.tomorrow-recovery {
+  font-family: var(--font-serif);
+  font-size: var(--text-body);
+  font-weight: 400;
+  line-height: 1.4;
+  margin-bottom: 4px;
+}
+.tomorrow-schedule {
+  font-family: var(--font-sans);
+  font-size: var(--text-small);
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* ========== SECTION 6: SIGNALS ========== */
+.signals-section {
+  padding: 24px 0;
+  border-top: 1px solid var(--border);
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+.signals-section.visible { opacity: 1; }
+.signals-heading {
+  font-family: var(--font-serif);
+  font-size: var(--text-heading);
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+.pattern-note {
+  font-family: var(--font-sans);
+  font-size: var(--text-small);
+  font-style: italic;
+  color: var(--muted);
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+.signal-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+  transition: background 200ms ease;
+}
+.signal-row:hover { background: var(--sand); margin: 0 -8px; padding-left: 8px; padding-right: 8px; }
+.signal-name { flex: 1; font-size: var(--text-body); min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.signal-num { font-family: var(--font-mono); font-size: var(--text-body); width: 48px; text-align: right; }
+.signal-spark { width: 80px; flex-shrink: 0; }
+.signal-spark svg { display: block; }
+.signal-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.dot-good { background: var(--forest); }
+.dot-bad { background: var(--accent); }
+.dot-warn { background: var(--amber); }
+.dot-none { background: var(--border); }
+.signals-more {
+  font-family: var(--font-sans);
+  font-size: var(--text-small);
+  color: var(--accent);
+  background: none;
+  border: none;
+  padding: 12px 0;
+  text-decoration: none;
+}
+.signals-more:hover { text-decoration: underline; }
+.signals-extra { display: none; }
+.signals-extra.expanded { display: block; }
+
+/* Cycle row in signals */
+.cycle-signal-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.cycle-signal-label {
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  flex: 1;
+}
+.cycle-signal-value {
+  font-family: var(--font-mono);
+  font-size: var(--text-small);
+  color: var(--accent);
+}
+
+/* ========== SECTION 7: ASK ========== */
+.ask-section {
+  padding: 24px 0 96px;
+  border-top: 1px solid var(--border);
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+.ask-section.visible { opacity: 1; }
+.ask-heading {
+  font-family: var(--font-serif);
+  font-size: var(--text-heading);
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+.chat-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.chip {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  color: var(--muted);
+  background: none;
+  border: 1px solid var(--border);
+  padding: 6px 12px;
+  border-radius: 100px;
+  white-space: nowrap;
+  transition: border-color 150ms;
+}
+.chip:hover { border-color: var(--muted); }
+.chat-history { min-height: 0; margin-bottom: 12px; }
+.chat-pair { padding: 16px 0; border-bottom: 1px solid var(--border); }
+.chat-pair:last-child { border-bottom: none; }
+.chat-q {
+  font-family: var(--font-sans);
+  font-size: var(--text-small);
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.chat-a {
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  line-height: 1.6;
+  max-width: 65ch;
+}
+.chat-thinking-dots {
+  font-family: var(--font-serif);
+  font-size: var(--text-heading);
+  color: var(--accent);
+  padding: 8px 0;
+  letter-spacing: 4px;
+}
+.chat-thinking-dots span { display: inline-block; animation: dot-pulse 1.4s ease-in-out infinite; }
+.chat-thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
+.chat-thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes dot-pulse { 0%, 80%, 100% { opacity: 0.3; } 40% { opacity: 1; } }
+.chat-input-area { position: relative; }
+.chat-input {
+  width: 100%;
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  padding: 8px 0;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  resize: none;
+  outline: none;
+  transition: border-color 150ms;
+}
+.chat-input:focus { border-bottom-color: var(--accent); }
+.chat-input::placeholder { color: var(--muted); }
+.send-btn {
+  position: absolute;
+  right: 0;
+  bottom: 8px;
+  font-family: var(--font-sans);
+  font-size: var(--text-small);
+  font-weight: 500;
+  color: var(--accent);
+  background: none;
+  border: none;
+  padding: 0;
+}
+.chat-caption {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  color: var(--muted);
+  margin-top: 8px;
+  opacity: 0.6;
+}
+
+/* ========== ERROR STATE ========== */
+.error-state { padding: 80px 0; text-align: center; }
+.error-state p { font-family: var(--font-serif); font-size: var(--text-heading); color: var(--muted); margin-bottom: 20px; }
+.retry-btn {
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  font-weight: 500;
+  color: var(--accent);
+  background: var(--accent-tint);
+  border: none;
+  padding: 10px 24px;
+  border-radius: 4px;
+}
+
+/* ========== EXPORT MENU ========== */
+.export-btn {
+  position: absolute;
+  top: 52px;
+  right: 32px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: none;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: color 150ms, background 150ms;
+}
+.export-btn:hover { color: var(--text); background: var(--sand); }
+.export-btn svg { width: 18px; height: 18px; }
+.export-menu {
+  position: absolute;
+  top: 88px;
+  right: 32px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 0;
+  min-width: 200px;
+  box-shadow: 0 4px 16px rgba(26,22,19,0.08);
+  z-index: 100;
+  display: none;
+}
+.export-menu.visible { display: block; }
+.export-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 16px;
+  border: none;
+  background: none;
+  font-family: var(--font-sans);
+  font-size: var(--text-small);
+  color: var(--text);
+  text-align: left;
+}
+.export-menu-item:hover { background: var(--sand); }
+.export-menu-item svg { width: 14px; height: 14px; color: var(--muted); flex-shrink: 0; }
+.export-menu-item span { font-family: var(--font-mono); font-size: var(--text-micro); color: var(--muted); margin-left: auto; }
+@media (max-width: 640px) {
+  .export-btn { right: 16px; top: 52px; }
+  .export-menu { right: 16px; top: 88px; }
+}
+</style>
+</head>
+<body>
+
+<div class="page" style="position:relative;">
+
+  <!-- Export menu -->
+  <button class="export-btn" id="export-btn" aria-label="Export" onclick="toggleExportMenu()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+      <polyline points="14 2 14 8 20 8"/>
+      <line x1="12" y1="18" x2="12" y2="12"/>
+      <polyline points="9 15 12 12 15 15"/>
+    </svg>
+  </button>
+  <div class="export-menu" id="export-menu">
+    <button class="export-menu-item" onclick="exportClinicalRecord()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+      </svg>
+      Export clinical record
+      <span>PDF</span>
+    </button>
+  </div>
+
+  <!-- SKELETON -->
+  <div id="skeleton-state">
+    <div class="sk-hero">
+      <div class="sk sk-line1"></div>
+      <div class="sk sk-line2"></div>
+      <div class="sk-chips">
+        <div class="sk sk-chip"></div>
+        <div class="sk sk-chip"></div>
+        <div class="sk sk-chip"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ERROR -->
+  <div id="error-state" class="error-state hidden">
+    <p>Could not load brief</p>
+    <button class="retry-btn" onclick="loadBrief()">Retry</button>
+  </div>
+
+  <!-- LOADED -->
+  <div id="loaded-state" class="hidden">
+
+    <!-- 1. Hero -->
+    <section class="hero" id="hero-section">
+      <div class="hero-wordmark">Soma</div>
+      <div class="hero-verdict" id="hero-verdict"></div>
+      <button class="verdict-why-link hidden" id="verdict-why-link">Why this verdict?</button>
+      <div class="verdict-panel" id="verdict-panel">
+        <table class="verdict-table" id="verdict-table"></table>
+        <div class="verdict-reasoning" id="verdict-reasoning"></div>
+      </div>
+      <div class="chip-row" id="chip-row"></div>
+    </section>
+
+    <!-- 2. Metrics -->
+    <div class="metrics-strip" id="metrics-strip"></div>
+
+    <!-- 3. Narration -->
+    <section class="narration-section" id="narration-section">
+      <div class="narration-header">
+        <div class="narration-heading-group">
+          <div class="narration-heading">Brief</div>
+          <button class="brief-play" id="brief-play" aria-label="Play brief audio" title="Listen to the brief">
+            <span class="brief-play-icon">&#9658;</span>
+            <span class="brief-play-label">Listen</span>
+          </button>
+        </div>
+        <button class="narration-toggle hidden" id="narration-toggle">Read more</button>
+      </div>
+      <div class="narration-body" id="narration-body">
+        <div class="narration-text" id="narration-text"></div>
+        <div class="narration-expanded hidden" id="narration-expanded">
+          <div class="narration-sub-section">
+            <div class="narration-sub-heading">Compared to yesterday</div>
+            <div class="narration-sub-text" id="brief-delta"></div>
+          </div>
+          <div class="narration-sub-section">
+            <div class="narration-sub-heading">Cycle context</div>
+            <div class="narration-sub-text" id="brief-cycle"></div>
+          </div>
+          <div class="narration-sub-section">
+            <div class="narration-sub-heading">Watch tomorrow</div>
+            <div class="narration-sub-text" id="brief-tomorrow"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Agenda -->
+    <section class="agenda-section" id="agenda-section">
+      <div class="agenda-header">
+        <div class="agenda-heading">Today</div>
+        <div class="view-toggle">
+          <button class="view-pill active" data-view="today" onclick="switchView('today')">Today</button>
+          <button class="view-pill" data-view="week" onclick="switchView('week')">Week</button>
+        </div>
+      </div>
+      <div id="today-view">
+        <div id="agenda-body"></div>
+      </div>
+      <div class="week-view" id="week-view">
+        <button class="week-back-link" id="week-back-link" onclick="switchView('week')">&#8592; Back to week</button>
+        <div id="week-rows"></div>
+      </div>
+    </section>
+
+    <!-- 5. Tomorrow -->
+    <section class="tomorrow-section hidden" id="tomorrow-section">
+      <div class="tomorrow-heading">Tomorrow</div>
+      <div class="tomorrow-recovery" id="tomorrow-recovery"></div>
+      <div class="tomorrow-schedule" id="tomorrow-schedule"></div>
+    </section>
+
+    <!-- 6. Signals -->
+    <section class="signals-section" id="signals-section">
+      <div class="signals-heading">Signals</div>
+      <div class="pattern-note hidden" id="pattern-note"></div>
+      <div id="signals-list"></div>
+    </section>
+
+    <!-- 7. Ask -->
+    <section class="ask-section" id="ask-section">
+      <div class="ask-heading">Ask</div>
+      <div class="chat-pills">
+        <button class="chip" onclick="askChip('Why this verdict?')">Why this verdict?</button>
+        <button class="chip" onclick="askChip('How\'s my sleep trending?')">How's my sleep trending?</button>
+        <button class="chip" onclick="askChip('What changed this week?')">What changed this week?</button>
+      </div>
+      <div class="chat-history" id="chat-history"></div>
+      <div id="chat-thinking" class="chat-thinking-dots hidden"><span>&#8226;</span><span>&#8226;</span><span>&#8226;</span></div>
+      <div class="chat-input-area">
+        <textarea class="chat-input" id="chat-input" rows="1" placeholder="Ask anything about your data."></textarea>
+        <button class="send-btn" onclick="sendChat()">Send</button>
+      </div>
+      <div class="chat-caption">Grounded in 14 days of your data</div>
+    </section>
+
+  </div>
+</div>
+
+<script>
+/* ====== HELPERS ====== */
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+function show(id) { document.getElementById(id).classList.remove('hidden'); }
+function hide(id) { document.getElementById(id).classList.add('hidden'); }
+function $(id) { return document.getElementById(id); }
+function formatNum(v) {
+  if (v == null) return '--';
+  return Number.isInteger(v) ? v.toLocaleString() : v.toFixed(1);
+}
+function formatSignalName(name) {
+  return name.replace(/_/g, ' ').replace(/\bhrv\b/i, 'HRV').replace(/\b\w/g, c => c.toUpperCase());
+}
+function timeToMinutes(t) {
+  if (!t) return null;
+  const [h, m] = t.split(':').map(Number);
+  return h * 60 + m;
+}
+
+const VERDICT_LABELS = { green: 'GREEN LIGHT', yellow: 'STEADY', red: 'RECOVERY DAY' };
+
+/* ====== STATE ====== */
+let briefData = null;
+let weekData = null;
+let chatBusy = false;
+let currentView = 'today';
+let cycleInfoDismissed = false;
+let briefAudio = null;
+let briefAudioUrl = null;
+let greetingAudio = null;
+let greetingPlayed = false;
+
+/* ====== LOAD ====== */
+async function loadBrief() {
+  hide('error-state'); hide('loaded-state'); show('skeleton-state');
+  try {
+    const res = await fetch('/api/brief');
+    if (!res.ok) throw new Error(res.statusText);
+    briefData = await res.json();
+    hide('skeleton-state'); show('loaded-state');
+    renderAll(briefData);
+  } catch (e) {
+    hide('skeleton-state'); show('error-state');
+  }
+}
+
+/* ====== RENDER ALL ====== */
+function ensureDemoBadge(d) {
+  let badge = document.getElementById('demo-badge');
+  if (d && d.demo_mode) {
+    if (!badge) {
+      badge = document.createElement('div');
+      badge.id = 'demo-badge';
+      badge.className = 'demo-badge';
+      badge.textContent = 'Demo data';
+      badge.title = 'DEMO_MODE is on: synthetic data only, no real personal data.';
+      document.body.appendChild(badge);
+    }
+  } else if (badge) {
+    badge.remove();
+  }
+}
+
+function renderAll(d) {
+  ensureDemoBadge(d);
+  renderHero(d);
+  setTimeout(() => $('hero-verdict').classList.add('visible'), 0);
+
+  setTimeout(() => {
+    renderMetrics(d);
+    $('metrics-strip').classList.add('visible');
+  }, 200);
+
+  setTimeout(() => {
+    renderNarration(d);
+    $('narration-section').classList.add('visible');
+  }, 600);
+
+  setTimeout(() => {
+    renderAgenda(d);
+    $('agenda-section').classList.add('visible');
+  }, 800);
+
+  setTimeout(() => {
+    renderTomorrow(d);
+    renderSignals(d);
+    $('signals-section').classList.add('visible');
+  }, 1000);
+
+  setTimeout(() => $('ask-section').classList.add('visible'), 1100);
+}
+
+/* ====== 1. HERO ====== */
+function renderHero(d) {
+  // Verdict
+  const first = d.narration.match(/^[^.!?]+[.!?]/);
+  $('hero-verdict').textContent = first ? first[0] : d.narration.slice(0, 80);
+
+  // Chips
+  const row = $('chip-row');
+  row.innerHTML = '';
+
+  // Date chip
+  const dt = new Date(d.date + 'T12:00:00');
+  const dayNames = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  const monthNames = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  const dateLabel = `${dayNames[dt.getDay()]} ${dt.getDate()} ${monthNames[dt.getMonth()]}`;
+  row.innerHTML += `<span class="info-chip date-chip">${dateLabel}</span>`;
+
+  // State chip
+  const stateLabel = VERDICT_LABELS[d.readiness_state] || d.readiness_state.toUpperCase();
+  row.innerHTML += `<span class="info-chip state-chip ${d.readiness_state}">${stateLabel}</span>`;
+
+  // Cycle chip
+  if (d.cycle) {
+    const cycleChip = document.createElement('span');
+    cycleChip.className = 'info-chip cycle-chip';
+    cycleChip.textContent = d.cycle.label;
+    if (!cycleInfoDismissed) {
+      const infoBtn = document.createElement('button');
+      infoBtn.className = 'cycle-info-btn';
+      infoBtn.textContent = 'i';
+      infoBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const existing = cycleChip.querySelector('.cycle-tooltip');
+        if (existing) { existing.remove(); cycleInfoDismissed = true; return; }
+        const tip = document.createElement('div');
+        tip.className = 'cycle-tooltip';
+        tip.textContent = 'Phase is calendar-based and approximate. Soma treats it as context, not as a basis for changing training or nutrition.';
+        cycleChip.appendChild(tip);
+        setTimeout(() => { tip.remove(); cycleInfoDismissed = true; }, 6000);
+      });
+      cycleChip.appendChild(infoBtn);
+    }
+    row.appendChild(cycleChip);
+  }
+
+  // Weather chip
+  if (d.weather_summary) {
+    const ws = d.weather_summary;
+    const cond = (ws.conditions || '').replace(/_/g, ' ').toUpperCase();
+    const label = `${Math.round(ws.temp_low || 0)}-${Math.round(ws.temp_high || 0)}\u00B0C ${cond}`;
+    row.innerHTML += `<span class="info-chip weather-chip">${label}</span>`;
+  }
+
+  // Verdict reasoning panel
+  renderVerdictPanel(d);
+}
+
+function renderVerdictPanel(d) {
+  const result = generateVerdict(
+    d.signals,
+    { events: d.events, freeBlocks: d.free_blocks },
+    d.weather_summary
+  );
+
+  // Table
+  const FLAG_CLASS = {
+    above: 'vt-flag-above', normal: 'vt-flag-normal',
+    mild_drag: 'vt-flag-drag', notable_drag: 'vt-flag-drag',
+    no_data: 'vt-flag-nodata', light: 'vt-flag-normal',
+    moderate: 'vt-flag-normal', dense: 'vt-flag-drag',
+  };
+  const FLAG_LABEL = {
+    above: '\u25B2', normal: '\u2013', mild_drag: '\u25BC', notable_drag: '\u25BC\u25BC',
+    no_data: '\u2013',
+  };
+
+  let html = '<thead><tr><th>Signal</th><th>Today</th><th>Baseline</th><th>Weight</th></tr></thead><tbody>';
+  result.signalRows.forEach(r => {
+    const cls = FLAG_CLASS[r.flag] || 'vt-flag-normal';
+    const indicator = FLAG_LABEL[r.flag] || '\u2013';
+    const weightPct = r.weight > 0 ? Math.round(r.weight * 100) + '%' : '\u2014';
+    html += `<tr>
+      <td class="vt-signal">${r.signal}</td>
+      <td><span class="${cls}">${indicator}</span> ${r.today}</td>
+      <td>${r.baseline}</td>
+      <td>${weightPct}</td>
+    </tr>`;
+  });
+  html += '</tbody>';
+  $('verdict-table').innerHTML = html;
+
+  // Reasoning sentences
+  $('verdict-reasoning').textContent = result.reasoning.join(' ');
+
+  // Toggle
+  const link = $('verdict-why-link');
+  const panel = $('verdict-panel');
+  link.classList.remove('hidden');
+  link.onclick = () => {
+    const opening = !panel.classList.contains('visible');
+    panel.classList.toggle('visible', opening);
+    link.textContent = opening ? 'Hide reasoning' : 'Why this verdict?';
+  };
+}
+
+/* ====== 2. METRICS ====== */
+const METRIC_KEYS = [
+  { key: 'sleep_score', label: 'SLEEP' },
+  { key: 'readiness_score', label: 'READINESS' },
+  { key: 'hrv_balance', label: 'HRV' },
+];
+
+function renderMetrics(d) {
+  const strip = $('metrics-strip');
+  strip.innerHTML = '';
+  METRIC_KEYS.forEach((m, idx) => {
+    const sig = d.signals[m.key] || {};
+    const history = (d.history || {})[m.key] || [];
+    const val = sig.value;
+
+    const card = document.createElement('div');
+    card.className = 'metric-card';
+
+    const label = document.createElement('div');
+    label.className = 'metric-label';
+    label.textContent = m.label;
+    card.appendChild(label);
+
+    const num = document.createElement('div');
+    num.className = 'metric-number';
+    num.textContent = '0';
+    card.appendChild(num);
+    if (val != null) animateCount(num, val, 800, idx * 80);
+
+    const sparkWrap = document.createElement('div');
+    sparkWrap.className = 'metric-spark';
+    const svg = buildSparkSVG(history);
+    if (svg) sparkWrap.innerHTML = svg;
+    card.appendChild(sparkWrap);
+    strip.appendChild(card);
+  });
+}
+
+function animateCount(el, target, duration, delay) {
+  setTimeout(() => {
+    const start = performance.now();
+    const isInt = Number.isInteger(target);
+    function tick(now) {
+      const t = Math.min((now - start) / duration, 1);
+      const ease = 1 - Math.pow(1 - t, 3);
+      const v = ease * target;
+      el.textContent = isInt ? Math.round(v) : v.toFixed(1);
+      if (t < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }, delay);
+}
+
+function buildSparkSVG(values) {
+  const W = 80, H = 24, PAD = 4;
+  const pts = values.map((v, i) => ({ i, v })).filter(p => p.v != null);
+  if (pts.length < 3)
+    return `<svg width="${W}" height="${H}"><text x="${W/2}" y="${H/2+4}" text-anchor="middle" font-family="var(--font-mono)" font-size="var(--text-micro)" fill="var(--muted)">14d</text></svg>`;
+  const vals = pts.map(p => p.v);
+  const min = Math.min(...vals), max = Math.max(...vals);
+  const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+  const range = max - min || 1;
+  const x = i => PAD + i * (W - PAD * 2) / (values.length - 1);
+  const y = v => PAD + (max - v) * (H - PAD * 2) / range;
+  const pathD = pts.map((p, j) => `${j ? 'L' : 'M'}${x(p.i).toFixed(1)},${y(p.v).toFixed(1)}`).join(' ');
+  const last = pts[pts.length - 1];
+  const baseY = y(mean).toFixed(1);
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" fill="none">
+    <line x1="${PAD}" y1="${baseY}" x2="${W-PAD}" y2="${baseY}" style="stroke:var(--muted);stroke-width:1;stroke-dasharray:2 2;opacity:0.3"/>
+    <path d="${pathD}" style="stroke:var(--muted);stroke-width:1;fill:none;stroke-linecap:round;stroke-linejoin:round"/>
+    <circle cx="${x(last.i).toFixed(1)}" cy="${y(last.v).toFixed(1)}" r="3" style="fill:var(--accent)"/>
+  </svg>`;
+}
+
+/* ====== 3. NARRATION ====== */
+function renderNarration(d) {
+  $('narration-text').textContent = d.narration || '';
+
+  // Paragraph 2: Compared to yesterday
+  $('brief-delta').textContent = buildDeltaParagraph(d);
+
+  // Paragraph 3: Cycle context
+  $('brief-cycle').textContent = buildCycleParagraph(d);
+
+  // Paragraph 4: Watch tomorrow
+  $('brief-tomorrow').textContent = buildTomorrowParagraph(d);
+
+  // Toggle
+  const toggle = $('narration-toggle');
+  const expanded = $('narration-expanded');
+  toggle.classList.remove('hidden');
+  toggle.onclick = () => {
+    const opening = !expanded.classList.contains('visible');
+    expanded.classList.toggle('hidden', false);
+    expanded.classList.toggle('visible', opening);
+    toggle.textContent = opening ? 'Show less' : 'Read more';
+  };
+
+  setupBriefPlay();
+}
+
+/* ====== BRIEF AUDIO (ElevenLabs) ====== */
+function setPlayState(state) {
+  const btn = $('brief-play');
+  if (!btn) return;
+  const icon = btn.querySelector('.brief-play-icon');
+  const label = btn.querySelector('.brief-play-label');
+  btn.classList.toggle('loading', state === 'loading');
+  const states = {
+    loading: ['⏳', 'Loading'],
+    playing: ['⏸', 'Pause'],
+    paused:  ['▶', 'Resume'],
+    error:   ['⚠', 'Audio failed'],
+    idle:    ['▶', 'Listen'],
+  };
+  const [i, l] = states[state] || states.idle;
+  icon.textContent = i;
+  label.textContent = l;
+}
+
+function resetBriefAudio() {
+  if (briefAudio) {
+    briefAudio.onplay = briefAudio.onpause = briefAudio.onended = null;
+    briefAudio.pause();
+    briefAudio = null;
+  }
+  if (briefAudioUrl) { URL.revokeObjectURL(briefAudioUrl); briefAudioUrl = null; }
+}
+
+function setupBriefPlay() {
+  const btn = $('brief-play');
+  if (!btn) return;
+  // Fresh brief: stop any prior playback and reset.
+  resetBriefAudio();
+  setPlayState('idle');
+
+  btn.onclick = async () => {
+    // Stop the short auto-played greeting so the two don't overlap.
+    greetingPlayed = true;
+    if (greetingAudio) { greetingAudio.pause(); greetingAudio = null; }
+    // Pause if currently playing.
+    if (briefAudio && !briefAudio.paused) {
+      briefAudio.pause();
+      return;
+    }
+    // Resume if paused mid-track.
+    if (briefAudio && briefAudio.paused && !briefAudio.ended) {
+      briefAudio.play();
+      return;
+    }
+    // Otherwise fetch and play.
+    setPlayState('loading');
+    try {
+      const res = await fetch('/api/brief/audio');
+      if (!res.ok) throw new Error('audio ' + res.status);
+      const blob = await res.blob();
+      resetBriefAudio();
+      briefAudioUrl = URL.createObjectURL(blob);
+      briefAudio = new Audio(briefAudioUrl);
+      briefAudio.onplay = () => setPlayState('playing');
+      briefAudio.onpause = () => { if (briefAudio && !briefAudio.ended) setPlayState('paused'); };
+      briefAudio.onended = () => setPlayState('idle');
+      await briefAudio.play();
+    } catch (e) {
+      setPlayState('error');
+    }
+  };
+}
+
+/* Auto-play the greeting line (hero verdict) on page load.
+   Browsers block autoplay with sound until the user interacts with the page,
+   so if play() is rejected we retry on the first click/keypress. */
+async function playGreeting() {
+  if (greetingPlayed) return;
+  let res;
+  try {
+    res = await fetch('/api/brief/greeting/audio');
+  } catch (e) { return; }            // network/TTS unavailable — stay silent
+  if (!res.ok) return;
+
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  greetingAudio = new Audio(url);
+  greetingAudio.onended = () => { URL.revokeObjectURL(url); greetingAudio = null; };
+
+  try {
+    await greetingAudio.play();
+    greetingPlayed = true;
+  } catch (e) {
+    // Autoplay blocked — play on the first user interaction instead.
+    const resume = () => {
+      document.removeEventListener('pointerdown', resume);
+      document.removeEventListener('keydown', resume);
+      if (greetingPlayed || !greetingAudio) return;
+      greetingPlayed = true;
+      greetingAudio.play().catch(() => {});
+    };
+    document.addEventListener('pointerdown', resume);
+    document.addEventListener('keydown', resume);
+  }
+}
+
+function buildDeltaParagraph(d) {
+  const LABELS = {
+    sleep_score: 'Sleep score', deep_sleep_score: 'Deep sleep', rem_sleep_score: 'REM sleep',
+    efficiency_score: 'Sleep efficiency', readiness_score: 'Readiness', hrv_balance: 'HRV balance',
+    resting_heart_rate_score: 'Resting heart rate', recovery_index: 'Recovery index',
+    body_temperature_score: 'Body temperature',
+  };
+  const history = d.history || {};
+  const deltas = [];
+  for (const [key, label] of Object.entries(LABELS)) {
+    const h = history[key];
+    if (!h || h.length < 2) continue;
+    const today = h[h.length - 1], yesterday = h[h.length - 2];
+    if (today == null || yesterday == null) continue;
+    const diff = today - yesterday;
+    if (diff === 0) continue;
+    deltas.push({ label, today, diff, absDiff: Math.abs(diff) });
+  }
+  // Also check signals without history
+  const sigs = d.signals || {};
+  for (const [key, label] of Object.entries(LABELS)) {
+    if (history[key]) continue;
+    const sig = sigs[key];
+    if (!sig || sig.value == null || sig.baseline_mean == null) continue;
+    const diff = Math.round(sig.value - sig.baseline_mean);
+    if (diff === 0) continue;
+    deltas.push({ label, today: sig.value, diff, absDiff: Math.abs(diff) });
+  }
+  deltas.sort((a, b) => b.absDiff - a.absDiff);
+  const top = deltas.slice(0, 3);
+  if (top.length === 0) return 'All signals held steady compared to yesterday.';
+  const parts = top.map(d => {
+    const verb = d.diff > 0 ? 'rose' : 'dropped';
+    return `${d.label} ${verb} ${d.absDiff} point${d.absDiff !== 1 ? 's' : ''} to ${d.today}`;
+  });
+  // Add a "held steady" note if there are signals that didn't move
+  const steady = deltas.length < Object.keys(LABELS).length;
+  let sentence = parts.join('. ') + '.';
+  if (steady && top.length < 3) sentence += ' Everything else held steady.';
+  return sentence;
+}
+
+function buildCycleParagraph(d) {
+  const cycle = d.cycle;
+  if (!cycle || !cycle.phase) return 'No cycle data available yet.';
+  const label = cycle.label || `Day ${cycle.day_of_cycle} ${cycle.phase}`;
+  if (cycle.pattern_observation) {
+    return `${label}. ${cycle.pattern_observation}`;
+  }
+  return `${label}. Building your cycle baseline. Two more weeks until pattern detection begins.`;
+}
+
+function buildTomorrowParagraph(d) {
+  const proj = d.tomorrow_projection;
+  if (!proj) return '';
+  const parts = [];
+  if (proj.recovery_outlook) parts.push(proj.recovery_outlook);
+  if (proj.schedule_outlook) parts.push(proj.schedule_outlook);
+  return parts.join(' ');
+}
+
+/* ====== 4. AGENDA ====== */
+const CAT_TO_SOURCE = { light_exposure: 'light', training: 'training', nutrition: 'nutrition', sleep: 'sleep' };
+
+function _planLabel(bl) {
+  const title = (bl.title || '').toLowerCase();
+  if (bl.category === 'nutrition') {
+    if (title.startsWith('breakfast')) return 'BREAKFAST';
+    if (title.startsWith('dinner') || title.includes('last meal')) return 'DINNER';
+    if (title.includes('lunch')) return 'LUNCH';
+    return 'NUTRITION';
+  }
+  if (bl.category === 'sleep') {
+    if (title.includes('wind')) return 'WIND-DOWN';
+    if (title.includes('lights out')) return 'LIGHTS OUT';
+    return 'SLEEP';
+  }
+  return (bl.category || '').replace(/_/g, ' ').toUpperCase();
+}
+
+function _recBySource(recs) {
+  const map = {};
+  (recs || []).forEach(r => {
+    const src = CAT_TO_SOURCE[r.category] || r.category;
+    if (!map[src]) map[src] = [];
+    map[src].push(r);
+  });
+  return map;
+}
+
+function _timeGroupLabel(min) {
+  if (min < 720) return 'Morning';
+  if (min < 1020) return 'Midday';
+  return 'Evening';
+}
+
+function renderAgenda(d) {
+  const body = $('agenda-body');
+
+  if (d.calendar_error) {
+    body.innerHTML = '<div class="calendar-error-msg">Calendar sync paused. Run <code>python test_oauth.py</code> to reconnect.</div>';
+  }
+
+  const items = [];
+
+  (d.events || []).forEach(ev => {
+    if (ev.all_day || !ev.start_time) return;
+    items.push({
+      type: 'calendar',
+      start: ev.start_time,
+      end: ev.end_time || null,
+      title: ev.title || '',
+      startMin: timeToMinutes(ev.start_time),
+    });
+  });
+
+  const recMap = _recBySource(d.recommendations);
+  const usedRecIdx = {};
+
+  (d.plan || []).forEach(bl => {
+    if (!bl.start) return;
+    const source = bl.source || '';
+    const recsForSource = recMap[source] || [];
+    const idx = usedRecIdx[source] || 0;
+    const rec = recsForSource[idx] || recsForSource[0] || null;
+    usedRecIdx[source] = idx + 1;
+
+    items.push({
+      type: 'plan',
+      start: bl.start,
+      end: bl.end || null,
+      title: bl.title || '',
+      label: _planLabel(bl),
+      source: source,
+      weather_note: bl.weather_note || '',
+      reason: rec ? rec.reason : '',
+      context_note: rec ? (rec.context_note || '') : '',
+      startMin: timeToMinutes(bl.start),
+    });
+  });
+
+  items.sort((a, b) => (a.startMin || 0) - (b.startMin || 0));
+
+  if (items.length === 0 && !d.calendar_error) {
+    body.innerHTML = '<div class="agenda-empty">No data for today</div>';
+    return;
+  }
+  if (items.length === 0) return;
+
+  const now = new Date();
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+
+  const listEl = document.createElement('div');
+  listEl.className = 'agenda-list';
+  listEl.id = 'agenda-list';
+
+  let currentGroup = null;
+
+  items.forEach(item => {
+    // Insert group label if this item starts a new time-of-day section
+    const group = _timeGroupLabel(item.startMin || 0);
+    if (group !== currentGroup) {
+      currentGroup = group;
+      const groupEl = document.createElement('div');
+      groupEl.className = 'agenda-group-label';
+      groupEl.textContent = group;
+      listEl.appendChild(groupEl);
+    }
+
+    const row = document.createElement('div');
+    row.className = 'agenda-row ' + (item.type === 'plan' ? 'is-plan' : 'is-calendar');
+    row.setAttribute('data-start-min', item.startMin);
+    const itemEndMin = item.end ? timeToMinutes(item.end) : (item.startMin || 0);
+    row.setAttribute('data-end-min', itemEndMin);
+
+    // Mark past events
+    if (itemEndMin <= nowMin) {
+      row.classList.add('is-past');
+    }
+
+    // Time
+    const timeCol = document.createElement('div');
+    timeCol.className = 'agenda-time';
+    const startEl = document.createElement('div');
+    startEl.className = 'agenda-time-start';
+    startEl.textContent = item.start.replace(/^0/, '');
+    timeCol.appendChild(startEl);
+    if (item.end) {
+      const endEl = document.createElement('div');
+      endEl.className = 'agenda-time-end';
+      endEl.textContent = item.end.replace(/^0/, '');
+      timeCol.appendChild(endEl);
+    }
+    row.appendChild(timeCol);
+
+    // Content
+    const content = document.createElement('div');
+    content.className = 'agenda-content';
+
+    if (item.type === 'plan') {
+      const catLine = document.createElement('div');
+      catLine.className = 'agenda-cat-line';
+      catLine.innerHTML = '<div class="agenda-dot"></div>';
+      const catLabel = document.createElement('div');
+      catLabel.className = 'agenda-category';
+      catLabel.textContent = item.label;
+      catLine.appendChild(catLabel);
+      content.appendChild(catLine);
+
+      const titleEl = document.createElement('div');
+      titleEl.className = 'agenda-plan-title';
+      titleEl.textContent = item.title;
+      content.appendChild(titleEl);
+
+      const details = [];
+      if (item.weather_note) details.push(item.weather_note);
+      if (item.context_note) details.push(item.context_note);
+      if (details.length > 0) {
+        const detailEl = document.createElement('div');
+        detailEl.className = 'agenda-detail';
+        detailEl.textContent = details.join(' \u2014 ');
+        content.appendChild(detailEl);
+      }
+
+      if (item.reason) {
+        const whyBtn = document.createElement('button');
+        whyBtn.className = 'why-toggle';
+        whyBtn.textContent = 'Why \u2192';
+        const reasonEl = document.createElement('div');
+        reasonEl.className = 'agenda-reason';
+        reasonEl.textContent = item.reason;
+
+        // Click row to toggle, or click the button
+        const toggleFn = (e) => {
+          if (e && e.target.closest('.agenda-time')) return;
+          const expanded = reasonEl.classList.toggle('expanded');
+          whyBtn.textContent = expanded ? 'Hide' : 'Why \u2192';
+        };
+        whyBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleFn(); });
+        row.addEventListener('click', toggleFn);
+        row.style.cursor = 'pointer';
+
+        content.appendChild(whyBtn);
+        content.appendChild(reasonEl);
+      }
+    } else {
+      // Calendar events: no dot, no accent color — visually quieter
+      const calLabel = document.createElement('div');
+      calLabel.className = 'agenda-cal-label';
+      calLabel.textContent = 'CALENDAR';
+      content.appendChild(calLabel);
+
+      const hasTitle = item.title && item.title.trim() && item.title !== '(no title)';
+      const titleEl = document.createElement('div');
+      if (hasTitle) {
+        titleEl.className = 'agenda-cal-title';
+        titleEl.textContent = item.title;
+      } else {
+        titleEl.className = 'agenda-cal-title focus-block';
+        titleEl.textContent = 'Focus block';
+      }
+      content.appendChild(titleEl);
+
+      if (item.end) {
+        const untilEl = document.createElement('div');
+        untilEl.className = 'agenda-cal-until';
+        untilEl.textContent = 'until ' + item.end.replace(/^0/, '');
+        content.appendChild(untilEl);
+      }
+    }
+
+    row.appendChild(content);
+    listEl.appendChild(row);
+  });
+
+  body.appendChild(listEl);
+  startNowIndicator();
+}
+
+let _nowInterval = null;
+function startNowIndicator() {
+  if (_nowInterval) clearInterval(_nowInterval);
+  function update() {
+    const list = $('agenda-list');
+    if (!list) return;
+    const old = list.querySelector('.agenda-now');
+    if (old) old.remove();
+
+    const now = new Date();
+    const nowMin = now.getHours() * 60 + now.getMinutes();
+    const hh = String(now.getHours()).padStart(2, '0');
+    const mm = String(now.getMinutes()).padStart(2, '0');
+    const rows = Array.from(list.querySelectorAll('.agenda-row'));
+    if (rows.length === 0) return;
+
+    // Refresh past-event state
+    rows.forEach(r => {
+      const endAttr = r.getAttribute('data-end-min');
+      const startAttr = r.getAttribute('data-start-min');
+      const endMin = endAttr ? parseInt(endAttr, 10) : parseInt(startAttr, 10);
+      if (endMin <= nowMin) r.classList.add('is-past');
+      else r.classList.remove('is-past');
+    });
+
+    let insertBefore = null;
+    for (let i = 0; i < rows.length; i++) {
+      const rowMin = parseInt(rows[i].getAttribute('data-start-min'), 10);
+      if (rowMin > nowMin) {
+        // If preceded by a group label, insert before that instead
+        const prev = rows[i].previousElementSibling;
+        insertBefore = (prev && prev.classList.contains('agenda-group-label')) ? prev : rows[i];
+        break;
+      }
+    }
+
+    const indicator = document.createElement('div');
+    indicator.className = 'agenda-now';
+    indicator.innerHTML = `<div class="agenda-now-label">${hh}:${mm}</div><div class="agenda-now-line"></div>`;
+
+    if (insertBefore) list.insertBefore(indicator, insertBefore);
+    else list.appendChild(indicator);
+  }
+  update();
+  _nowInterval = setInterval(update, 60000);
+}
+
+/* ====== VIEW TOGGLE ====== */
+function switchView(view) {
+  currentView = view;
+  const todayView = $('today-view');
+  const weekView = $('week-view');
+  document.querySelectorAll('.view-pill').forEach(p =>
+    p.classList.toggle('active', p.getAttribute('data-view') === view));
+
+  if (view === 'today') {
+    todayView.style.display = '';
+    weekView.classList.remove('active');
+    $('week-back-link').style.display = 'none';
+    const url = new URL(window.location);
+    url.searchParams.delete('view');
+    history.replaceState(null, '', url);
+  } else {
+    todayView.style.display = 'none';
+    weekView.classList.add('active');
+    $('week-back-link').style.display = 'none';
+    const url = new URL(window.location);
+    url.searchParams.set('view', 'week');
+    history.replaceState(null, '', url);
+    if (!weekData) loadWeek();
+    else renderWeek(weekData);
+  }
+}
+
+async function loadWeek() {
+  $('week-rows').innerHTML = '<div style="padding:24px 0;color:var(--muted);font-size:var(--text-small)">Loading week...</div>';
+  try {
+    const res = await fetch('/api/week');
+    if (!res.ok) throw new Error(res.statusText);
+    weekData = await res.json();
+    renderWeek(weekData);
+  } catch (e) {
+    $('week-rows').innerHTML = '<div style="padding:24px 0;color:var(--accent);font-size:var(--text-small)">Could not load week view.</div>';
+  }
+}
+
+function renderWeek(wd) {
+  const rows = $('week-rows');
+  rows.innerHTML = '';
+  const todayStr = briefData ? briefData.date : '';
+
+  (wd.days || []).forEach(day => {
+    const row = document.createElement('div');
+    row.className = 'week-row';
+    const isToday = day.date === todayStr;
+
+    const left = document.createElement('div');
+    left.className = 'week-row-left';
+    left.innerHTML = `<div class="week-row-date">${day.date.slice(5)}</div>
+      <div class="week-row-weekday">${isToday ? 'Today' : day.weekday}</div>
+      <span class="week-row-state state-${day.readiness_state}">${day.readiness_state === 'pending' ? 'pending' : (VERDICT_LABELS[day.readiness_state] || day.readiness_state)}</span>`;
+    row.appendChild(left);
+
+    const right = document.createElement('div');
+    right.className = 'week-row-right';
+    if (day.verdict) right.innerHTML += `<div class="week-row-verdict">${esc(day.verdict)}</div>`;
+    if (day.signals_summary) right.innerHTML += `<div class="week-row-summary">${esc(day.signals_summary)}</div>`;
+    row.appendChild(right);
+
+    if (day.readiness_state !== 'pending') {
+      row.addEventListener('click', () => {
+        if (isToday) { switchView('today'); }
+        else {
+          $('today-view').style.display = '';
+          $('week-view').classList.remove('active');
+          $('week-back-link').style.display = 'block';
+          $('week-view').classList.add('active');
+          $('agenda-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    }
+    rows.appendChild(row);
+  });
+}
+
+/* ====== 5. TOMORROW ====== */
+function renderTomorrow(d) {
+  const proj = d.tomorrow_projection;
+  if (!proj || (!proj.recovery_outlook && !proj.schedule_outlook)) {
+    hide('tomorrow-section'); return;
+  }
+  $('tomorrow-recovery').textContent = proj.recovery_outlook || '';
+  $('tomorrow-schedule').textContent = proj.schedule_outlook || '';
+  show('tomorrow-section');
+}
+
+/* ====== 6. SIGNALS ====== */
+function renderSignals(d) {
+  const list = $('signals-list');
+  list.innerHTML = '';
+
+  // Cycle phase row at top
+  if (d.cycle) {
+    const cycleRow = document.createElement('div');
+    cycleRow.className = 'cycle-signal-row';
+    cycleRow.innerHTML = `<div class="cycle-signal-label">Cycle phase</div>
+      <div class="cycle-signal-value">${esc(d.cycle.label)}</div>
+      <div class="signal-dot dot-none"></div>`;
+    list.appendChild(cycleRow);
+  }
+
+  // Pattern observation
+  if (d.cycle && d.cycle.pattern_observation) {
+    const note = $('pattern-note');
+    note.textContent = d.cycle.pattern_observation;
+    note.classList.remove('hidden');
+  }
+
+  const entries = Object.entries(d.signals)
+    .map(([name, s]) => ({ name, ...s }))
+    .filter(s => s.severity !== 'no_data')
+    .sort((a, b) => Math.abs(b.z_score || 0) - Math.abs(a.z_score || 0));
+
+  const top5 = entries.slice(0, 5);
+  const rest = entries.slice(5);
+
+  top5.forEach(s => list.appendChild(buildSignalRow(s, d.history)));
+
+  if (rest.length > 0) {
+    const moreBtn = document.createElement('button');
+    moreBtn.className = 'signals-more';
+    moreBtn.textContent = `View all signals (${rest.length} more)`;
+    list.appendChild(moreBtn);
+    const extra = document.createElement('div');
+    extra.className = 'signals-extra';
+    rest.forEach(s => extra.appendChild(buildSignalRow(s, d.history)));
+    list.appendChild(extra);
+    moreBtn.addEventListener('click', () => {
+      const expanded = extra.classList.toggle('expanded');
+      moreBtn.textContent = expanded ? 'Show less' : `View all signals (${rest.length} more)`;
+    });
+  }
+}
+
+function buildSignalRow(s, history) {
+  const row = document.createElement('div');
+  row.className = 'signal-row';
+  row.innerHTML = `<div class="signal-name">${formatSignalName(s.name)}</div>
+    <div class="signal-num">${formatNum(s.value)}</div>`;
+
+  const sparkWrap = document.createElement('div');
+  sparkWrap.className = 'signal-spark';
+  const hist = (history || {})[s.name];
+  if (hist) {
+    const svg = buildSparkSVG(hist);
+    if (svg) sparkWrap.innerHTML = svg;
+  }
+  row.appendChild(sparkWrap);
+
+  const dot = document.createElement('div');
+  dot.className = 'signal-dot';
+  const sev = s.severity || 'no_data';
+  if (sev === 'low' || sev === 'below_baseline') dot.classList.add('dot-bad');
+  else if (sev === 'high') dot.classList.add('dot-warn');
+  else if (sev === 'normal' || sev === 'above_baseline') dot.classList.add('dot-good');
+  else dot.classList.add('dot-none');
+  row.appendChild(dot);
+  return row;
+}
+
+/* ====== 7. CHAT ====== */
+function getChatInput() { return $('chat-input'); }
+
+function askChip(text) { getChatInput().value = text; sendChat(); }
+
+function appendChatPair(question, answerEl) {
+  const pair = document.createElement('div');
+  pair.className = 'chat-pair';
+  pair.innerHTML = `<div class="chat-q">${esc(question)}</div>`;
+  pair.appendChild(answerEl);
+  $('chat-history').appendChild(pair);
+  pair.scrollIntoView({ behavior: 'smooth', block: 'end' });
+}
+
+function streamWords(el, text, onDone) {
+  const words = text.split(/(\s+)/);
+  let i = 0;
+  const interval = Math.max(35, Math.min(40, 2000 / words.length));
+  function next() {
+    if (i < words.length) { el.textContent += words[i]; i++; setTimeout(next, interval); }
+    else if (onDone) onDone();
+  }
+  next();
+}
+
+async function sendChat() {
+  const input = getChatInput();
+  const question = (input.value || '').trim();
+  if (chatBusy || !question) return;
+  chatBusy = true; input.value = '';
+
+  const answerEl = document.createElement('div');
+  answerEl.className = 'chat-a';
+  appendChatPair(question, answerEl);
+  show('chat-thinking');
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question }),
+    });
+    if (!res.ok) throw new Error(res.statusText);
+    const data = await res.json();
+    hide('chat-thinking');
+    streamWords(answerEl, data.answer, () => { chatBusy = false; });
+  } catch (e) {
+    hide('chat-thinking');
+    answerEl.textContent = 'Something went wrong. Try again.';
+    chatBusy = false;
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  getChatInput().addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+  });
+});
+
+/* ====== EXPORT ====== */
+function toggleExportMenu() {
+  const menu = document.getElementById('export-menu');
+  menu.classList.toggle('visible');
+}
+// Close menu on outside click
+document.addEventListener('click', function(e) {
+  const menu = document.getElementById('export-menu');
+  const btn = document.getElementById('export-btn');
+  if (menu && !menu.contains(e.target) && !btn.contains(e.target)) {
+    menu.classList.remove('visible');
+  }
+});
+
+function exportClinicalRecord() {
+  document.getElementById('export-menu').classList.remove('visible');
+  const btn = document.querySelector('.export-menu-item');
+  const origText = btn.querySelector('svg').nextSibling;
+  btn.style.opacity = '0.5';
+  btn.style.pointerEvents = 'none';
+
+  fetch('/api/export/clinical-record')
+    .then(res => {
+      if (!res.ok) throw new Error(res.statusText);
+      return res.blob();
+    })
+    .then(blob => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'soma-clinical-record.pdf';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    })
+    .catch(() => {
+      alert('Could not generate PDF. Try again.');
+    })
+    .finally(() => {
+      btn.style.opacity = '';
+      btn.style.pointerEvents = '';
+    });
+}
+
+/* ====== BOOT ====== */
+(async function boot() {
+  await loadBrief();
+  if (briefData) playGreeting();
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('view') === 'week') setTimeout(() => switchView('week'), 1400);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+/*
+ * Soma Design Tokens
+ * Single source of truth for colors, typography, and spacing.
+ * All values consumed via var(--token-name) throughout the app.
+ */
+
+:root {
+  /* ── Colors ──────────────────────────────────────────────────
+     bg        Warm off-white page background
+     text      Near-black primary text (warm undertone)
+     accent    Deep oxblood — logo and active states ONLY,
+               never for buttons or large fills
+     muted     Warm gray for secondary/helper text
+     border    Faint warm divider lines
+     sand      Slightly darker off-white for subtle fills
+     forest    Deep green for positive states
+     amber     Warm amber for caution states
+  */
+  --bg: #F7F3ED;
+  --text: #1A1613;
+  --accent: #6B1E1E;
+  --muted: #8B7F75;
+  --border: #E8DFD5;
+  --sand: #F0EAE0;
+  --forest: #2D4A3A;
+  --amber: #A0691E;
+
+  /* Tints — translucent washes for chip/tag backgrounds */
+  --accent-tint: rgba(107, 30, 30, 0.08);
+  --accent-tint-12: rgba(107, 30, 30, 0.12);
+  --forest-tint: rgba(45, 74, 58, 0.12);
+  --amber-tint: rgba(160, 105, 30, 0.12);
+  --calendar-text: rgba(26, 22, 19, 0.7);
+
+  /* ── Typography ─────────────────────────────────────────────
+     Fonts
+       serif   Fraunces — headlines, verdict, wordmark
+       sans    Inter Tight — body copy, UI text (default)
+       mono    JetBrains Mono — timestamps, metrics, labels
+
+     Type scale (five sizes only)
+       display  40px — hero verdict, one per page
+       heading  24px — section headings (Today, Signals, etc.)
+       body     15px — narration, detail text, default size
+       small    13px — secondary info, captions, meta
+       micro    11px — chips, labels, timestamps, uppercase tags
+  */
+  --font-serif: 'Fraunces', serif;
+  --font-sans: 'Inter Tight', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --text-display: 40px;
+  --text-heading: 24px;
+  --text-body: 15px;
+  --text-small: 13px;
+  --text-micro: 11px;
+
+  /* ── Spacing (4 px baseline grid) ───────────────────────────
+     All spacing must be a multiple of 4 px.
+     Use --space-N where N = multiplier (e.g. --space-3 = 12px).
+  */
+  --space-1: 4px;   /*  4  */
+  --space-2: 8px;   /*  8  */
+  --space-3: 12px;  /* 12  */
+  --space-4: 16px;  /* 16  */
+  --space-5: 20px;  /* 20  */
+  --space-6: 24px;  /* 24  */
+  --space-8: 32px;  /* 32  */
+  --space-10: 40px; /* 40  */
+  --space-12: 48px; /* 48  */
+  --space-16: 64px; /* 64  */
+  --space-24: 96px; /* 96  */
+}
